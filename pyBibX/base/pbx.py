@@ -24,13 +24,13 @@ import re
 import squarify                  
 import unicodedata                
 import textwrap
-import helpers
+from . import helpers
 
 try:
     import importlib.resources as pkg_resources
 except ImportError:
     import importlib_resources as pkg_resources
-import stws
+from . import stws
 
 from bertopic import BERTopic                               
 from collections import Counter
