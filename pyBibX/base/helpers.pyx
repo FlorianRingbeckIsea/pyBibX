@@ -3,7 +3,7 @@ cimport numpy as cnp
 
 # returns for each string in u_ent the number of occurencences in the list of strin gs ent.
 # optionally does not count occurrences but rather adds the number provided by acc 
-cpdef get_counts_fast(list u_ent, list ent, int[:] acc):
+cpdef get_counts_fast(list u_ent, list ent, cnp.int64_t[:] acc):
     cdef list counts
     cdef int i, j
     cdef int ents
