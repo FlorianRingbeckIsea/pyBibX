@@ -55,7 +55,7 @@ from wordcloud import WordCloud
 
 # pbx Class
 class pbx_probe():
-    def __init__(self, file_bib, db = 'scopus', del_duplicated = True):
+    def __init__(self, file_bib, db = 'scopus', del_duplicated = True, filter_doc_type = []):
         self.institution_names = constants.institution_names
         self.language_names = constants.language_names
         self.country_names = constants.country_names
@@ -66,8 +66,21 @@ class pbx_probe():
         self.color_names = constants.color_names
         
         self.data, self.entries = self.__read_bib(file_bib, db, del_duplicated)
+        if len(filter_doc_type) > 0:
+            self.__filter_data_doc_type(filter_doc_type)
+            # update verbose output string
+            self.__update_vb() 
         self.__make_bib()
     
+    def __filter_data_doc_type(self, doc_type):
+        """Removes all documents from self.data, which are not of a type listed in doc_type"""
+        docs = []
+        for item in doc_type:
+            if (sum(self.data['document_type'].isin([item])) > 0):
+                docs.append(item) 
+        self.data = self.data[self.data['document_type'].isin(docs)]
+        self.data = self.data.reset_index(drop = True)
+
     # Function: Prepare .bib File
     def __make_bib(self, verbose = True):
         self.ask_gpt_ap         = -1
@@ -227,12 +240,8 @@ class pbx_probe():
             self.data = self.data.reset_index(drop = True)
             self.__make_bib(verbose = False)
         if (len(doc_type) > 0):
-            for item in doc_type:
-                if (sum(self.data['document_type'].isin([item])) > 0):
-                    docs.append(item) 
-                    self.data = self.data[self.data['document_type'].isin(docs)]
-                    self.data = self.data.reset_index(drop = True)
-                    self.__make_bib(verbose = False)
+            self.__filter_data_doc_type(doc_type)
+            self.__make_bib(verbose = False)
         if (year_str > -1):
             self.data = self.data[self.data['year'] >= str(year_str)]
             self.data = self.data.reset_index(drop = True)
