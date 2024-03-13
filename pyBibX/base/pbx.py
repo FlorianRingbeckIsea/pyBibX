@@ -104,7 +104,7 @@ class pbx_probe():
         self.aut_docs           = [len(item) for item in self.aut]
         self.aut_single         = len([item  for item in self.aut_docs if item == 1])
         self.aut_multi          = [item for item in self.aut_docs if item > 1]
-        self.aut_cit            = helpers.get_counts_fast(self.u_aut, self.aut, np.array(self.citation, dtype=int))
+        self.aut_cit            = helpers.get_counts_fast(self.u_aut, self.aut, np.array(self.citation, dtype=np.int64))
         self.kid, self.u_kid    = self.__get_str(entry = 'keywords', s = ';', lower = True, sorting = True)
         if ('unknow' in self.u_kid):
             self.u_kid.remove('unknow')
@@ -132,19 +132,19 @@ class pbx_probe():
         idx.reverse()
         self.u_jou              = [self.u_jou[i] for i in idx]
         self.jou_count          = [self.jou_count[i] for i in idx]
-        self.jou_cit            = helpers.get_counts_fast(self.u_jou, self.jou, np.array(self.citation, dtype=int))
+        self.jou_cit            = helpers.get_counts_fast(self.u_jou, self.jou, np.array(self.citation, dtype=np.int64))
         self.lan, self.u_lan    = self.__get_str(entry = 'language', s = '.', lower = True, sorting = True) 
         lan_                    = [item for sublist in self.lan for item in sublist]
         self.lan_count          = [lan_.count(item) for item in self.u_lan]
         self.ctr, self.u_ctr    = self.__get_countries()
         ctr_                    = [self.ctr[i][j] for i in range(0, len(self.aut)) for j in range(0, len(self.aut[i]))]
         self.ctr_count          = [ctr_.count(item) for item in self.u_ctr]
-        self.ctr_cit            = helpers.get_counts_fast(self.u_ctr, self.ctr, np.array(self.citation, dtype=int))
+        self.ctr_cit            = helpers.get_counts_fast(self.u_ctr, self.ctr, np.array(self.citation, dtype=np.int64))
         self.uni, self.u_uni    = self.__get_institutions() 
         uni_                    = [item for sublist in self.uni for item in sublist]
         self.uni_count          = [uni_.count(item) for item in self.u_uni]
-        self.uni_cit            = helpers.get_counts_fast(self.u_uni, self.uni, np.array(self.citation, dtype=int))
-        self.doc_aut            = helpers.get_counts_fast(self.u_aut, self.aut,  np.array([], dtype=int))
+        self.uni_cit            = helpers.get_counts_fast(self.u_uni, self.uni, np.array(self.citation, dtype=np.int64))
+        self.doc_aut            = helpers.get_counts_fast(self.u_aut, self.aut,  np.array([], dtype=np.int64))
         self.av_doc_aut         = round(sum(self.doc_aut)/len(self.doc_aut), 2)
         self.t_c, self.s_c      = helpers.total_and_self_citations_fast(self.u_aut, self.aut, self.citation, self.ref)
         self.dy_ref             = self.__get_ref_year()
