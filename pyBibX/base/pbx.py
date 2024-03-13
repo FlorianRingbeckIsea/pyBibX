@@ -993,14 +993,12 @@ class pbx_probe():
         df = df.str.lower()
         
         #remove dots from author names
-        print("replace list")
         for i in range(0,self.data.shape[0]):
             authorList = self.aut[i]
             for authorName in authorList:
                 newAuthorName = authorName.replace('.', '')
                 df[i] = df[i].replace(authorName, newAuthorName)
 
-        print("identify countries")
         ctrs = [[] for i in range(0, df.shape[0])]
         for i in range(0, self.data.shape[0]):
             source = self.data.loc[i, 'source'].lower()
