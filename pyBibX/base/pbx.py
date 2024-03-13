@@ -1267,17 +1267,19 @@ class pbx_probe():
         return c_year_, c_count_
     
     # Function: Get Countries
-    def __get_countries(self):
+    def __get_countries(self, verbose=False):
         df = pd.Series(np.zeros(self.data.shape[0]))
         for i in range(0, self.data.shape[0]):
-            if (self.data.loc[i, 'source'].lower() == 'scopus' or self.data.loc[i, 'source'].lower() == 'pubmed'):
+            source = self.data.loc[i, 'source'].lower()
+            if (source == 'scopus' or source == 'pubmed'):
                 df[i] = self.data.loc[i, 'affiliation']
-            elif (self.data.loc[i, 'source'].lower() == 'wos'):
+            elif (source == 'wos'):
                 df[i] = self.data.loc[i, 'affiliation_'].replace('(Corresponding Author)', '')
                 if (',' in df[i] and ', ' not in df[i]):
                     df[i] = df[i].replace(',', ', ')
             elif (df[i] == 0):
                 df[i] = 'UNKNOW'
+
         df = df.str.replace(' USA',            ' United States of America',   case = False, regex = True)
         df = df.str.replace('ENGLAND',         'United Kingdom',              case = False, regex = True)
         df = df.str.replace('Antigua & Barbu', 'Antigua and Barbuda',         case = False, regex = True)
@@ -1302,73 +1304,64 @@ class pbx_probe():
         df = df.str.replace('U Arab Emirates', 'United Arab Emirates',        case = False, regex = True)
         df = df.str.replace('USA',             'United States of America',    case = False, regex = True)
         df = df.str.replace('VietNam',         'Viet Nam',                    case = False, regex = True)
-        #for i in range(0, df.shape[0]):
-            #df[i] = df[i].replace(' USA',            ' United States of America')
-            #df[i] = df[i].replace('ENGLAND',         'United Kingdom')
-            #df[i] = df[i].replace('Antigua & Barbu', 'Antigua and Barbuda')
-            #df[i] = df[i].replace('Bosnia & Herceg', 'Bosnia and Herzegovina')
-            #df[i] = df[i].replace('Cent Afr Republ', 'Central African Republic')
-            #df[i] = df[i].replace('Czech Republic',  'Czechia')
-            #df[i] = df[i].replace('Dominican Rep',   'Dominican Republic')
-            #df[i] = df[i].replace('England',         'United Kingdom')
-            #df[i] = df[i].replace('Equat Guinea',    'Equatorial Guinea')
-            #df[i] = df[i].replace('Fr Austr Lands',  'French Southern Territories')
-            #df[i] = df[i].replace('Fr Polynesia',    'French Polynesia')
-            #df[i] = df[i].replace('Malagasy Republ', 'Madagascar')
-            #df[i] = df[i].replace('Mongol Peo Rep',  'Mongolia')
-            #df[i] = df[i].replace('Neth Antilles',   'Saint Martin')
-            #df[i] = df[i].replace('North Ireland',   'Ireland')
-            #df[i] = df[i].replace('Peoples R China', 'China')
-            #df[i] = df[i].replace('Rep of Georgia',  'Georgia')
-            #df[i] = df[i].replace('Russia',          'Russian Federation')
-            #df[i] = df[i].replace('Sao Tome E Prin', 'Sao Tome and Principe')
-            #df[i] = df[i].replace('Scotland',        'United Kingdom')
-            #df[i] = df[i].replace('St Kitts & Nevi', 'Saint Kitts and Nevis')
-            #df[i] = df[i].replace('Trinid & Tobago', 'Trinidad and Tobago')
-            #df[i] = df[i].replace('U Arab Emirates', 'United Arab Emirates')
-            #df[i] = df[i].replace('USA',             'United States of America')
-            #df[i] = df[i].replace('VietNam',         'Viet Nam')
         df = df.str.lower()
-        #for i in range(0, len(self.aut)):
-            #for j in range(0, len(self.aut[i])):
-                #for k in range(0, df.shape[0]):
-                    #df[k] = df[k].replace(self.aut[i][j], self.aut[i][j].replace('.', ''))
-        replace_dict = {}
-        for sublist in self.aut:
-            for val in sublist:
-                replace_dict[val] = val.replace('.', '')
-        df.replace(replace_dict, inplace = True)
+        
+        #remove dots from author names
+        print("replace list")
+        for i in range(0,self.data.shape[0]):
+            authorList = self.aut[i]
+            for authorName in authorList:
+                newAuthorName = authorName.replace('.', '')
+                df[i] = df[i].replace(authorName, newAuthorName)
+
+        print("identify countries")
         ctrs = [[] for i in range(0, df.shape[0])]
         for i in range(0, self.data.shape[0]):
-            if (self.data.loc[i, 'source'].lower() == 'scopus'):
+            source = self.data.loc[i, 'source'].lower()
+            if ( source == 'scopus'):
                 affiliations = str(df[i]).strip().split(';')
                 for affiliation in affiliations:
                     for country in self.country_names:
                         if (country.lower() in affiliation.lower()):
                             ctrs[i].append(country)
                             break
-            if (self.data.loc[i, 'source'].lower()  == 'pubmed'):
+            if (source  == 'pubmed'):
                 affiliations = str(df[i]).strip().split(',')
                 for affiliation in affiliations:
                     for country in self.country_names:
                         if (country.lower() in affiliation.lower()):
                             ctrs[i].append(country)
                             break
-            if (self.data.loc[i, 'source'].lower()  == 'wos'):
+            if (source  == 'wos'):
                 affiliations = str(df[i]).strip().split('.')[:-1]
                 for affiliation in affiliations:
+                     affiliation = affiliation.lower()
                      for j in range(0, len(self.aut[i])):
                          for country in self.country_names:
-                             if (country.lower() in affiliation.lower() and self.aut[i][j].lower().replace('.', '') in affiliation.lower()):
+                             if (country.lower() in affiliation and self.aut[i][j].lower().replace('.', '') in affiliation):
                                  ctrs[i].append(country)
                                  break
+
+        # if there are more authors than identified countries, append the country identified last to the country list
+        # if none is identified, append UNKNOW
         for i in range(0, len(ctrs)):
             while len(self.aut[i]) > len(ctrs[i]):
                 if (len(ctrs[i]) == 0):
+                    if(verbose):
+                        print("-------------------------------------")
+                        print("Could not get country for publication:")
+                        print(self.data.loc[i, 'unique_id'])
+                        print(df[i])
                     ctrs[i].append('UNKNOW')
                 ctrs[i].append(ctrs[i][-1])
             if (len(ctrs[i]) == 0):
+                if(verbose):
+                    print("-------------------------------------")
+                    print("Could not get country for publication:")
+                    print(self.data.loc[i, 'unique_id'])
+                    print(df[i])
                 ctrs[i].append('UNKNOW')
+
         u_ctrs = [item for sublist in ctrs for item in sublist]
         u_ctrs = list(set(u_ctrs))
         if (len(u_ctrs[0]) == 0):
